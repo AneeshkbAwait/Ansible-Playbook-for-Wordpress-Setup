@@ -1,0 +1,129 @@
+---
+- name: "Installing & configuring mariadb-server"
+  hosts: amazon
+  become: true
+  vars_files:
+    - variables.vars
+        
+    wp_url: "https://wordpress.org/wordpress-5.8.4.tar.gz"
+        
+  tasks:
+    
+    
+    - name: "Apache - package Installation"
+      yum:
+        name: httpd
+        state: present
+            
+    - name: "Apache - Crating VirtualHost /etc/httpd/conf.d/default.conf"
+      template:
+        src: virualhost.conf.tmpl
+        dest: /etc/httpd/conf.d/default.conf
+        owner: "{{ httpd_user }}"
+        group: "{{ httpd_group }}"
+            
+            
+    - name: "Apache - Creating DocumentRoot /var/www/html/{{ domain_name }}"
+      file:
+        path: "/var/www/html/{{ domain_name }}"
+        state: directory
+        owner: "{{ httpd_user }}"
+        group: "{{ httpd_group }}"
+            
+    
+    - name: "Apache - Installing php support"
+      shell: amazon-linux-extras install php7.4 -y
+      
+    
+    - name: "Apache - Restarting/Enabling php-fpm"
+      service:
+        name: php-fpm
+        state: restarted
+        enabled: true
+            
+    
+    - name: "Apache - Restarting/Enabling Service"
+      service:
+        name: httpd
+        state: restarted
+        enabled: true
+            
+    - name: "Mariadb-Server - Package Installation"
+      yum:
+        name: 
+          - mariadb-server
+          - MySQL-python
+        state: present
+            
+    - name: "Mariadb-Server - Restarting/Enabling Service"
+      service:
+        name: mariadb
+        state: restarted
+        enabled: true
+            
+    - name: "Mariadb-Server - Setting Root Passsword"
+      ignore_errors: true
+      mysql_user:
+        login_user: "root"
+        login_password: ""
+        name: "root"
+        password: "{{ mysql_root_password }}"
+        host_all: true
+            
+    - name: "Mariadb-Server - Removing Anonymous Users"
+      mysql_user:
+        login_user: "root"
+        login_password: "{{ mysql_root_password }}"
+        name: ""
+        state: absent
+        host_all: true
+            
+    - name: "Mariadb-Server - Creating Database {{ mysql_extra_database }}"
+      mysql_db:
+        login_user: "root"
+        login_password: "{{ mysql_root_password }}"
+        name: "{{ mysql_extra_database }}"
+        state: present
+            
+    - name: "mariadb-Server - Creating User {{ mysql_extra_user }}"
+      mysql_user:
+        login_user: "root"
+        login_password: "{{ mysql_root_password }}"
+        name: "{{ mysql_extra_user }}"
+        host: "%"
+        password: "{{ mysql_extra_password }}"
+        priv: "{{ mysql_extra_database }}.*:ALL"
+            
+    - name: "Wordpress - Downloading Archive File {{ wp_url }}"
+      get_url:
+        url: "{{ wp_url }}"
+        dest: /tmp/wordpress.tar.gz
+            
+    - name: "Wordpress - Extracting /tmp/wordpress.tar.gz"
+      unarchive:
+        src: /tmp/wordpress.tar.gz
+        dest: /tmp/
+        remote_src: true
+            
+    - name: "Wordpress - Copying Contents from /tmp/wordpress/ to /var/www/html/{{ domain_name }}"
+      copy:
+        src: /tmp/wordpress/
+        dest: "/var/www/html/{{ domain_name }}"
+        remote_src: true
+        owner: "{{ httpd_user }}"
+        group: "{{ httpd_group }}"
+            
+    - name: "Wordpress - Creating wp-config.php from template"
+      template:
+        src: wp-config.php.tmpl
+        dest: "/var/www/html/{{ domain_name }}/wp-config.php"
+        owner: "{{ httpd_user }}"
+        group: "{{ httpd_group }}"
+            
+    - name: "Post-Installation CleanUp"
+      file:
+        path: "{{ item}}"
+        state: absent
+      with_items:
+        - /tmp/wordpres.tar.gz
+        - /tmp/wordpress
