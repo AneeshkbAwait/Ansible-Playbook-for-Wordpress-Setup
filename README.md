@@ -1,5 +1,17 @@
 This Playbook will fulfil Wordpress installation and environment setup for the given domain on an Amazon Linux-based Operating System.
 
+Ansible Modules used:
+1. yum
+2. template
+3. file
+4. service
+5. copy
+6. shell
+7. musql_user
+8. mysql_db
+9. unarchive
+10. get_url
+
 Here, we are using Ansible templates to setup the virtualhost and wordpress wp-config.php configurations.
 
 The Virtualhost configuration is built using the template file virualhost.conf.tmpl and the Wordpress configuration setup is done by using the wp-config.php.tmpl template file.
