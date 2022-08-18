@@ -1,3 +1,4 @@
+# Ansible Playbook for Wordpress Setup
 This Playbook will fulfil Wordpress installation and environment setup for the given domain on an Amazon Linux-based Operating System.
 
 Ansible Modules used:
@@ -18,7 +19,7 @@ The Virtualhost configuration is built using the template file virualhost.conf.t
 
 The 2 Template files is as follows;
 
-virualhost.conf.tmpl
+### virualhost.conf.tmpl
 ```
 <virtualhost *:{{ httpd_port }}>
     
@@ -32,7 +33,7 @@ virualhost.conf.tmpl
 </virtualhost>
 ```
 
-wp-config.php.tmpl
+### wp-config.php.tmpl
 ```
 <?php
 /**
@@ -129,6 +130,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Sets up WordPress vars and included files. */
 require_once ABSPATH . 'wp-settings.php';
 ```
+
+### Wordpress-Setup.yaml
 
 As is required by every WordPress installation, the Playbook is divided into three major sections;
 
@@ -264,4 +267,4 @@ As is required by every WordPress installation, the Playbook is divided into thr
         - /tmp/wordpress
 ```
 
-Once the playbook gets executed it will complete the setup of Wordpress in an Amazon Linux based environment.
+Once the playbook gets executed it will complete the setup of Wordpress in an Amazon Linux based environment. I hope this is helpful for everyone.
